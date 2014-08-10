@@ -1,0 +1,3 @@
+language: java
+install: ./build/ant pull
+script: ./build/ant -p
