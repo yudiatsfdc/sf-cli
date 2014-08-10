@@ -2,5 +2,6 @@ language: java
 install: ./build/ant.sh -p
 script: ./build/ant.sh pull
 env:
-  - secure: "IO7CEujaxJggx2F7QYa1ZQ1NNbzPiJXMFAVoeuGDcNDfwbwJ1iw1SzM8c4wED0USxkuVn9LYWNNeYCNXZ5yNy1ir0qEFHdoZa2uyGM5mnxNHvv8mGFVuhspjoYsXB6uNcqhWoh/7/IC4DgD7Xf3nq67rfyim8u7qSR/cl0sUXWo="
-  - secure: "LDNMko9ZWyy67rrTTJli1jQAPeFFvZJ/Rc2SMe5o1rxogWApKIf0be5SNHazU3rmFqZ1/3A0LjeCE7FaoON6yafplyZx6rTlNm3oMMuQGihQ9j3JjPDOatFVyXle2CgeJ9K72ks34G4CF9/M2D4QxV7DUr8cWOvartl2uf5Jg3U="
+  global: 
+    - secure: "IO7CEujaxJggx2F7QYa1ZQ1NNbzPiJXMFAVoeuGDcNDfwbwJ1iw1SzM8c4wED0USxkuVn9LYWNNeYCNXZ5yNy1ir0qEFHdoZa2uyGM5mnxNHvv8mGFVuhspjoYsXB6uNcqhWoh/7/IC4DgD7Xf3nq67rfyim8u7qSR/cl0sUXWo="
+    - secure: "LDNMko9ZWyy67rrTTJli1jQAPeFFvZJ/Rc2SMe5o1rxogWApKIf0be5SNHazU3rmFqZ1/3A0LjeCE7FaoON6yafplyZx6rTlNm3oMMuQGihQ9j3JjPDOatFVyXle2CgeJ9K72ks34G4CF9/M2D4QxV7DUr8cWOvartl2uf5Jg3U="
