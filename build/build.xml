@@ -53,6 +53,7 @@ Ant build.xml template for Salesforce projects.
 		description="Deletes current metadata that depend on base packages and uninstalls base packages">
 		<antcall target="preUninstall" />
 	    <antcall target="uninstallPackages"/>
+	    <antcall target="deleteCurrentComponents"/>
 	</target>
 
     <target name="preUninstall" >
@@ -116,6 +117,22 @@ Ant build.xml template for Salesforce projects.
 		<mkdir dir="../src" />
 		<sf:retrieve username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
 			retrieveTarget="../src" unpackaged="${package.xml}"/>
+	</target>
+
+	<target name="deleteCurrentComponents"
+		depends="updateCurrentComponentForDeletion">
+      <sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
+      	deployRoot="./clean/delete" runAllTests="false"/>
+    </target>
+
+	<target name="updateCurrentComponentForDeletion"
+		description="Copies current package.xml file to destructiveChanges.xml">
+		<copy file="${project.dir}/src/package.xml" tofile="./clean/delete/destructiveChanges.xml"/>
+		<echoxml file="./clean/delete/package.xml">
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <version>28.0</version>
+</Package>
+		</echoxml>		
 	</target>
 
 	<condition property="do.preDeploy.uninstall">
