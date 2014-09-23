@@ -30,7 +30,7 @@ Ant build.xml template for Salesforce projects.
     <target name="deploy" 
     	description="Deploys the current metadata" >
       <sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
-      	deployRoot="../src" runAllTests="false"/>
+      	deployRoot="${project.dir}/src" runAllTests="false"/>
     </target>	
 
     <target name="configure"
@@ -121,7 +121,7 @@ Ant build.xml template for Salesforce projects.
 
 	<target name="deleteCurrentComponents"
 		depends="updateCurrentComponentForDeletion">
-      <sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
+      <sf:deploy purgeOnDelete="true" username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
       	deployRoot="./clean/delete" runAllTests="false"/>
     </target>
 
