@@ -1,3 +1,7 @@
+<!--
+Ant build.xml template for Salesforce projects. 
+
+-->
 <project name="Template force.com build tasks" basedir="." xmlns:sf="antlib:com.salesforce">
 
 	<property file="user.properties"/>
@@ -15,10 +19,96 @@
 		resource="net/sf/antcontrib/antlib.xml" 
 		classpath="${basedir}/lib/ant-contrib-1.0b3.jar"
 		/>
+    
+    <target name="installDependencies"
+    	description="Installs packages that the app code depend on"
+    	if="do.preDeploy.install">
+	   	<sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
+	   		deployRoot="./preDeploy/install/src" runAllTests="false"/>
+    </target>	
+    
+    <target name="deploy" 
+    	description="Deploys the current metadata" >
+      <sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
+      	deployRoot="../src" runAllTests="false"/>
+    </target>	
 
-	
-	<target name="pull" 
-		description="Pulls the current metadata from the org">
+    <target name="configure"
+    	description="Deploys,updates and/or deletes metadata that is dependent on this projects metadata">
+    	<antcall target="configure.deploy" />
+    	<antcall target="configure.delete" />
+    </target>
+
+	<target name="configure.delete" if="do.configure.delete">
+      <sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
+      	deployRoot="./configure/delete" runAllTests="false" />
+	</target>
+
+	<target name="configure.deploy" if="do.configure.deploy">
+      <sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
+      	deployRoot="./configure/deploy" runAllTests="false" />
+	</target>
+
+	<target name="clean"
+		description="Deletes current metadata that depend on base packages and uninstalls base packages">
+		<antcall target="preUninstall" />
+	    <antcall target="uninstallPackages"/>
+	</target>
+
+    <target name="preUninstall" >
+    	<antcall target="preUninstall.delete" />
+    	<antcall target="preUninstall.update" />
+    </target>
+
+	<target name="preUninstall.delete" if="do.preUninstall.delete">
+      <sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
+      	deployRoot="./preUninstall/delete" runAllTests="false" />
+	</target>
+
+	<target name="preUninstall.update" if="do.preUninstall.update">
+      <sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
+      	deployRoot="./preUninstall/update/src" runAllTests="false" />
+	</target>	
+
+	<condition property="do.preUninstall.update">
+		<available file="./preUninstall/update" type="dir" />
+	</condition>	
+
+	<condition property="do.preUninstall.delete">
+		<available file="./preUninstall/delete" type="dir" />
+	</condition>		
+
+	<!-- Uninstall targets -->
+	<target name="testIfPackageInstalled" 
+		if="do.preDeploy.uninstall">
+		<mkdir dir="${basedir}/retrieveOutput"/>
+		<trycatch property="retrieve.message">
+			<try>
+				<echo message="Checking for installed pacakges..."/>
+				<antcall target="retrievePackageDetails"/>
+				<echo message="Packages installed. Uninstalling..."/>
+			</try>
+			<catch>
+				<echo>Retrieve Message: ${retrieve.message}</echo>
+				<property name="cn.seleniumNotInstalled" value="true"/>
+			</catch>
+		</trycatch>
+		<delete dir="${basedir}/retrieveOutput"/> 
+	</target>	
+
+	<target name="retrievePackageDetails" >
+		<sf:retrieve username="${sf.username}" password="${sf.password}" 
+			serverurl="${sf.serverurl}" retrieveTarget="${basedir}/retrieveOutput" packageNames="Apex Selenium Client"/>
+	</target>
+
+	<target name="uninstallPackages" unless="cn.seleniumNotInstalled" 
+		depends="testIfPackageInstalled"
+		if="do.preDeploy.uninstall">
+      	<sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
+      		deployRoot="./uninstall/src" runAllTests="false"/>
+	</target>	
+
+	<target name="pull"> 
 		<condition property="package.xml" value="../src/package.xml" else=".package.xml">
 			<available file="../src/package.xml"/>
 		</condition>
@@ -28,6 +118,23 @@
 			retrieveTarget="../src" unpackaged="${package.xml}"/>
 	</target>
 
+	<condition property="do.preDeploy.uninstall">
+		<available file="./uninstall/src" type="dir" />
+	</condition>	
 
-	
+	<condition property="do.preDeploy.install">
+		<available file="./preDeploy/install/src" type="dir" />
+	</condition>    
+
+	<condition property="do.preUninstall.update">
+		<available file="./preDeploy/update/src" type="dir" />
+	</condition>  	
+
+	<condition property="do.configure.deploy">
+		<available file="./configure/deploy/src" type="dir" />
+	</condition>  	
+
+	<condition property="do.configure.delete">
+		<available file="./configure/delete/destructiveChanges.xml" />
+	</condition>  	
 </project>
