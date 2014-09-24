@@ -9,7 +9,6 @@ Ant build.xml template for Salesforce projects.
 	<property environment="env"/>
 	
 	<import file="lib/exec_anon.xml"/>	
-
 	<typedef 
 		uri="antlib:com.salesforce" 
 		resource="com/salesforce/antlib.xml" 
@@ -19,12 +18,12 @@ Ant build.xml template for Salesforce projects.
 		resource="net/sf/antcontrib/antlib.xml" 
 		classpath="${basedir}/lib/ant-contrib-1.0b3.jar"
 		/>
-    
+
     <target name="installDependencies"
     	description="Installs packages that the app code depend on"
-    	if="do.preDeploy.install">
+    	if="do.dependencies.install">
 	   	<sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
-	   		deployRoot="./preDeploy/install/src" runAllTests="false"/>
+	   		deployRoot="${support.dir}/dependencies/install/src" runAllTests="false"/>
     </target>	
     
     <target name="deploy" 
@@ -37,16 +36,23 @@ Ant build.xml template for Salesforce projects.
     	description="Deploys,updates and/or deletes metadata that is dependent on this projects metadata">
     	<antcall target="configure.deploy" />
     	<antcall target="configure.delete" />
+    	<antcall target="configure.script" />
     </target>
 
 	<target name="configure.delete" if="do.configure.delete">
       <sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
-      	deployRoot="./configure/delete" runAllTests="false" />
+      	deployRoot="${support.dir}/configure/delete" runAllTests="false" />
 	</target>
 
 	<target name="configure.deploy" if="do.configure.deploy">
       <sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
-      	deployRoot="./configure/deploy" runAllTests="false" />
+      	deployRoot="${support.dir}/configure/deploy" runAllTests="false" />
+	</target>
+
+	<target name="configure.script" if="do.configure.script">
+		<antcall target="ExecAnonScript">
+			<param name="what" value="${support.dir}/configure/configure.apex" />
+		</antcall>
 	</target>
 
 	<target name="clean"
@@ -63,25 +69,25 @@ Ant build.xml template for Salesforce projects.
 
 	<target name="preUninstall.delete" if="do.preUninstall.delete">
       <sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
-      	deployRoot="./preUninstall/delete" runAllTests="false" />
+      	deployRoot="${support.dir}/preUninstall/delete" runAllTests="false" />
 	</target>
 
 	<target name="preUninstall.update" if="do.preUninstall.update">
       <sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
-      	deployRoot="./preUninstall/update/src" runAllTests="false" />
+      	deployRoot="${support.dir}/preUninstall/update/src" runAllTests="false" />
 	</target>	
 
 	<condition property="do.preUninstall.update">
-		<available file="./preUninstall/update" type="dir" />
+		<available file="${support.dir}/preUninstall/update" type="dir" />
 	</condition>	
 
 	<condition property="do.preUninstall.delete">
-		<available file="./preUninstall/delete" type="dir" />
+		<available file="${support.dir}/preUninstall/delete" type="dir" />
 	</condition>		
 
 	<!-- Uninstall targets -->
 	<target name="testIfPackageInstalled" 
-		if="do.preDeploy.uninstall">
+		if="do.clean.uninstall">
 		<mkdir dir="${basedir}/retrieveOutput"/>
 		<trycatch property="retrieve.message">
 			<try>
@@ -102,45 +108,45 @@ Ant build.xml template for Salesforce projects.
 			serverurl="${sf.serverurl}" retrieveTarget="${basedir}/retrieveOutput" packageNames="Apex Selenium Client"/>
 	</target>
 
-	<target name="uninstallPackages" unless="cn.seleniumNotInstalled" 
-		depends="testIfPackageInstalled"
-		if="do.preDeploy.uninstall">
+	<target name="uninstallPackages" 
+		if="do.clean.uninstall">
       	<sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
-      		deployRoot="./uninstall/src" runAllTests="false"/>
+      		deployRoot="${support.dir}/dependencies/uninstall/src" runAllTests="false"/>
 	</target>	
 
 	<target name="pull"> 
 		<condition property="package.xml" value="../src/package.xml" else=".package.xml">
-			<available file="../src/package.xml"/>
+			<available file="${project.dir}/src/package.xml"/>
 		</condition>
 
-		<mkdir dir="../src" />
+		<mkdir dir="${project.dir}/pullOutput/src" />
 		<sf:retrieve username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
-			retrieveTarget="../src" unpackaged="${package.xml}"/>
+			retrieveTarget="${project.dir}/pullOutput/src" unpackaged="${package.xml}"/>
 	</target>
 
 	<target name="deleteCurrentComponents"
 		depends="updateCurrentComponentForDeletion">
       <sf:deploy purgeOnDelete="true" username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
-      	deployRoot="./clean/delete" runAllTests="false"/>
+      	deployRoot="${support.dir}/clean/delete" runAllTests="false"/>
     </target>
 
 	<target name="updateCurrentComponentForDeletion"
 		description="Copies current package.xml file to destructiveChanges.xml">
-		<copy file="${project.dir}/src/package.xml" tofile="./clean/delete/destructiveChanges.xml"/>
-		<echoxml file="./clean/delete/package.xml">
+		<mkdir dir="${support.dir}/clean" />
+		<copy file="${project.dir}/src/package.xml" tofile="${support.dir}/clean/delete/destructiveChanges.xml"/>
+		<echoxml file="${support.dir}/clean/delete/package.xml">
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <version>28.0</version>
 </Package>
 		</echoxml>		
 	</target>
 
-	<condition property="do.preDeploy.uninstall">
-		<available file="./uninstall/src" type="dir" />
+	<condition property="do.clean.uninstall">
+		<available file="${support.dir}/dependencies/uninstall/src" type="dir" />
 	</condition>	
 
-	<condition property="do.preDeploy.install">
-		<available file="./preDeploy/install/src" type="dir" />
+	<condition property="do.dependencies.install">
+		<available file="${support.dir}/dependencies/install/src" type="dir" />
 	</condition>    
 
 	<condition property="do.preUninstall.update">
@@ -148,10 +154,14 @@ Ant build.xml template for Salesforce projects.
 	</condition>  	
 
 	<condition property="do.configure.deploy">
-		<available file="./configure/deploy/src" type="dir" />
+		<available file="${support.dir}/configure/deploy/src" type="dir" />
 	</condition>  	
 
 	<condition property="do.configure.delete">
-		<available file="./configure/delete/destructiveChanges.xml" />
+		<available file="${support.dir}/configure/delete/destructiveChanges.xml" />
 	</condition>  	
+
+	<condition property="do.configure.script">
+		<available file="${support.dir}/configure/configure.apex" />
+	</condition>  		
 </project>
