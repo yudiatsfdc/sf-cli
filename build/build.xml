@@ -46,7 +46,7 @@ Ant build.xml template for Salesforce projects.
 
 	<target name="configure.deploy" if="do.configure.deploy">
       <sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
-      	deployRoot="${support.dir}/configure/deploy" runAllTests="false" />
+      	deployRoot="${support.dir}/configure/deploy/src" runAllTests="false" />
 	</target>
 
 	<target name="configure.script" if="do.configure.script">
@@ -58,8 +58,8 @@ Ant build.xml template for Salesforce projects.
 	<target name="clean"
 		description="Deletes current metadata that depend on base packages and uninstalls base packages">
 		<antcall target="preUninstall" />
-	    <antcall target="uninstallPackages"/>
 	    <antcall target="deleteCurrentComponents"/>
+	    <antcall target="uninstallPackages"/>
 	</target>
 
     <target name="preUninstall" >
@@ -84,6 +84,12 @@ Ant build.xml template for Salesforce projects.
 	<condition property="do.preUninstall.delete">
 		<available file="${support.dir}/preUninstall/delete" type="dir" />
 	</condition>		
+
+	<target name="run">
+		<java fork="true" jar="lib/ccli.jar">
+			<arg line="${sf.username} ${sf.password} -max_loop_limit 3000" />
+		</java>
+	</target>
 
 	<!-- Uninstall targets -->
 	<target name="testIfPackageInstalled" 
