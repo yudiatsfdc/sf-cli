@@ -41,7 +41,7 @@ Ant build.xml template for Salesforce projects.
 
 	<target name="configure.delete" if="do.configure.delete">
       <sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" 
-      	deployRoot="${support.dir}/configure/delete" runAllTests="false" />
+      	deployRoot="${support.dir}/configure/delete/src" runAllTests="false" />
 	</target>
 
 	<target name="configure.deploy" if="do.configure.deploy">
@@ -50,8 +50,19 @@ Ant build.xml template for Salesforce projects.
 	</target>
 
 	<target name="configure.script" if="do.configure.script">
-		<antcall target="ExecAnonScript">
-			<param name="what" value="${support.dir}/configure/configure.apex" />
+		<loadfile srcfile="${support.dir}/configure/configure.apex" property="configure.script">
+			<filterchain>
+				<replaceregex pattern="\$\{" replace="{" />
+				<filterreader classname="org.apache.tools.ant.filters.ReplaceTokens">
+					<param type="propertiesfile" value="${user.properties.file}" />
+            		<param type="tokenchar" name="begintoken" value="{"/>
+            		<param type="tokenchar" name="endtoken" value="}"/>					
+				</filterreader>
+			</filterchain>
+		</loadfile>
+
+		<antcall target="ExecAnon">
+			<param name="what" value="${configure.script}" />
 		</antcall>
 	</target>
 
